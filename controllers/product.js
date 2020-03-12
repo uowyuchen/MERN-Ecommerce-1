@@ -212,7 +212,7 @@ exports.listBySearch = (req, res) => {
   let skip = parseInt(req.body.skip);
   let findArgs = {};
 
-  console.log(order, sortBy, limit, skip, req.body.filters);
+  console.log("1", order, sortBy, limit, skip, req.body.filters);
   console.log("findArgs", findArgs);
 
   for (let key in req.body.filters) {
@@ -224,8 +224,11 @@ exports.listBySearch = (req, res) => {
           $gte: req.body.filters[key][0],
           $lte: req.body.filters[key][1]
         };
+        // console.log("2", findArgs[key]);
+        // console.log("4", findArgs);
       } else {
         findArgs[key] = req.body.filters[key];
+        // console.log("3", findArgs[key]);
       }
     }
   }
@@ -257,4 +260,33 @@ exports.photo = (req, res, next) => {
     return res.send(req.product.photo.data);
   }
   next(); // 这个next在这里有什么用我还不知道
+};
+
+exports.listSearch = (req, res) => {
+  // create query object to hold search value & category value
+  const query = {};
+  // assign search value to query.name
+  if (req.query.search) {
+    // $regex是mongo给我们的search方法，“ℹ”作用是不区分大小写
+    // 必须齐名为name，因为要和product model中的name一样，我们是按照product的name搜的
+    query.name = { $regex: req.query.search, $options: "i" };
+    // assign category value to query.category
+    if (req.query.category && req.query.category != "All") {
+      query.category = req.query.category;
+    }
+
+    // console.log("query", query);
+    // query {
+    //   name: { '$regex': 'book', '$options': 'i' },
+    //   category: '5e49e6d9a7e3348458fb3d7a'
+    // }
+
+    // find the product based on query object with 2 properties
+    Product.find(query, (err, products) => {
+      if (err) {
+        return res.status(400).json({ error: errorHandler(err) });
+      }
+      res.json(products);
+    }).select("-photo");
+  }
 };

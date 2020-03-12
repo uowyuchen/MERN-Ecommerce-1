@@ -11,15 +11,18 @@ const {
   listRelated,
   listCategories,
   listBySearch,
-  photo
+  photo,
+  listSearch
 } = require("../controllers/product");
 const { requireSignin, isAuth, isAdmin } = require("../controllers/auth");
 const { userById } = require("../controllers/user");
 
 // get one product
 router.get("/product/:productId", read);
+
 // create a new product
 router.post("/product/create/:userId", requireSignin, isAuth, isAdmin, create);
+
 // delete a product
 router.delete(
   "/product/:productId/:userId",
@@ -28,6 +31,7 @@ router.delete(
   isAdmin,
   remove
 );
+
 // update a prodcut
 router.put(
   "/product/:productId/:userId",
@@ -36,6 +40,7 @@ router.put(
   isAdmin,
   update
 );
+
 // get all products or 有条件的list all products
 router.get("/products", list);
 
@@ -44,6 +49,8 @@ router.get("/products/related/:productId", listRelated);
 router.get("/products/categories", listCategories);
 // search products
 router.post("/products/by/search", listBySearch);
+// search product for shop page
+router.get("/products/search", listSearch);
 // get product photo
 router.get("/products/photo/:productId", photo);
 
