@@ -6,15 +6,17 @@ const { errorHandler } = require("../helpers/dbErrorHandler");
 
 // 和userById一摸一样
 exports.productById = (req, res, next, id) => {
-  Product.findById(id).exec((err, product) => {
-    if (err || !product) {
-      return res.status(400).json({
-        error: "Product not found"
-      });
-    }
-    req.product = product;
-    next();
-  });
+  Product.findById(id)
+    .populate("category")
+    .exec((err, product) => {
+      if (err || !product) {
+        return res.status(400).json({
+          error: "Product not found"
+        });
+      }
+      req.product = product;
+      next();
+    });
 };
 
 // create a new product
@@ -173,7 +175,10 @@ exports.listRelated = (req, res) => {
   let limit = req.query.limit ? parseInt(req.query.limit) : 6;
   // $ne: not include 为什么不include自己？我还不知道为什么！
   // 解释：比如category是react系列，我们找到所有react的书，但不包括自己。不知道为什么。
-  Product.find({ id: { $ne: req.product }, category: req.product.category })
+  Product.find({
+    _id: { $ne: req.product._id },
+    category: req.product.category
+  })
     .limit(limit)
     .populate("category", "_id name")
     .exec((err, products) => {
@@ -182,7 +187,9 @@ exports.listRelated = (req, res) => {
           error: "Products not found"
         });
       }
+      // console.log(req.product._id);
       res.json(products);
+      // console.log(products);
     });
 };
 

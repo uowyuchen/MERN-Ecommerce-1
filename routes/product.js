@@ -1,6 +1,5 @@
 const express = require("express");
 const router = express.Router();
-
 const {
   create,
   productById,
@@ -44,13 +43,18 @@ router.put(
 // get all products or 有条件的list all products
 router.get("/products", list);
 
+// list all related products
 router.get("/products/related/:productId", listRelated);
+
 // list products by category
 router.get("/products/categories", listCategories);
+
 // search products
 router.post("/products/by/search", listBySearch);
+
 // search product for shop page
 router.get("/products/search", listSearch);
+
 // get product photo
 router.get("/products/photo/:productId", photo);
 
