@@ -21,6 +21,7 @@ exports.read = (req, res) => {
   // 获取user信息的时候，为了安全🔐需要，把密码暂时undefined
   req.profile.hashed_password = undefined;
   req.profile.salt = undefined;
+
   // 还记得userById吗，user信息就在req.profile里面
   return res.json(req.profile);
 };
@@ -41,6 +42,36 @@ exports.update = (req, res) => {
       user.salt = undefined;
       // return the updated user info to frontend
       res.json(user);
+    }
+  );
+};
+
+// add user purchase order to order history
+exports.addOrderToUserHistory = (req, res, next) => {
+  let history = [];
+  req.body.order.products.forEach(product => {
+    history.push({
+      _id: product._id,
+      name: product.name,
+      description: product.description,
+      category: product.category,
+      quantity: product.count,
+      transaction_id: req.body.order.transaction_id,
+      amount: req.body.order.amount
+    });
+  });
+
+  User.findOneAndUpdate(
+    { _id: req.profile._id },
+    { $push: { history: history } },
+    { new: true },
+    (error, data) => {
+      if (error) {
+        return res.status(400).json({
+          error: "Could not update user purchase history"
+        });
+      }
+      next();
     }
   );
 };
