@@ -103,35 +103,35 @@ exports.update = (req, res) => {
       });
     }
     // // Validation for all fields
-    const { name, description, price, category, quantity, shipping } = fields;
-    if (
-      !name ||
-      !description ||
-      !price ||
-      !category ||
-      !quantity ||
-      !shipping
-    ) {
-      return res.status(400).json({
-        error: "All fields are required"
-      });
-    }
+    // const { name, description, price, category, quantity, shipping } = fields;
+    // if (
+    //   !name ||
+    //   !description ||
+    //   !price ||
+    //   !category ||
+    //   !quantity ||
+    //   !shipping
+    // ) {
+    //   return res.status(400).json({
+    //     error: "All fields are required"
+    //   });
+    // }
 
     // 因为param所以用到了productById，所以我们有req.product
     let product = req.product;
     // user lodash to update object
     product = _.extend(product, fields);
 
-    if (files.photo) {
-      // Validation for image size
-      if (files.photo.size > 2000000) {
-        return res.status(400).json({
-          error: "Image should be less than 2mb in size"
-        });
-      }
-      product.photo.data = fs.readFileSync(files.photo.path);
-      product.photo.contentType = files.photo.type;
-    }
+    // if (files.photo) {
+    //   // Validation for image size
+    //   if (files.photo.size > 2000000) {
+    //     return res.status(400).json({
+    //       error: "Image should be less than 2mb in size"
+    //     });
+    //   }
+    //   product.photo.data = fs.readFileSync(files.photo.path);
+    //   product.photo.contentType = files.photo.type;
+    // }
 
     product.save((err, savedProduct) => {
       if (err) {
@@ -160,6 +160,21 @@ exports.list = (req, res) => {
     .populate("category")
     .sort([[sortBy, order]]) // [[id, asc]]
     .limit(limit)
+    .exec((err, foundProduct) => {
+      if (err) {
+        return res.status(400).json({
+          error: "Products not found"
+        });
+      }
+      res.send(foundProduct);
+    });
+};
+
+// list all products form admin use
+exports.listAllProductsForAdmin = (req, res) => {
+  Product.find()
+    .select("-photo") // 不选photo是因为，photo是一大堆二进制，留着以后处理
+    .populate("category")
     .exec((err, foundProduct) => {
       if (err) {
         return res.status(400).json({

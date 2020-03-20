@@ -11,7 +11,8 @@ const {
   listCategories,
   listBySearch,
   photo,
-  listSearch
+  listSearch,
+  listAllProductsForAdmin
 } = require("../controllers/product");
 const { requireSignin, isAuth, isAdmin } = require("../controllers/auth");
 const { userById } = require("../controllers/user");
@@ -42,6 +43,8 @@ router.put(
 
 // get all products or 有条件的list all products
 router.get("/products", list);
+
+router.get("/products/admin", listAllProductsForAdmin);
 
 // list all related products
 router.get("/products/related/:productId", listRelated);
