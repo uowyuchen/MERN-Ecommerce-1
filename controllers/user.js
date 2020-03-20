@@ -1,4 +1,6 @@
 const User = require("../models/user");
+const { errorHandler } = require("../helpers/dbErrorHandler");
+const { Order } = require("../models/order");
 
 // 这一段是一个middleware
 exports.userById = (req, res, next, id) => {
@@ -27,23 +29,64 @@ exports.read = (req, res) => {
 };
 
 // update user
+// exports.update = (req, res) => {
+//   User.findByIdAndUpdate(
+//     { id: req.profile.id },
+//     { $set: req.body },
+//     { new: true },
+//     (err, user) => {
+//       if (err || !user) {
+//         return res.status(400).json({
+//           error: "You are not authorized to perform this action"
+//         });
+//       }
+//       user.hashed_password = undefined;
+//       user.salt = undefined;
+//       // return the updated user info to frontend
+//       res.json(user);
+//     }
+//   );
+// };
 exports.update = (req, res) => {
-  User.findByIdAndUpdate(
-    { id: req.profile.id },
-    { $set: req.body },
-    { new: true },
-    (err, user) => {
-      if (err || !user) {
+  // console.log('UPDATE USER - req.user', req.user, 'UPDATE DATA', req.body);
+  const { name, password } = req.body;
+
+  User.findOne({ _id: req.profile._id }, (err, user) => {
+    if (err || !user) {
+      return res.status(400).json({
+        error: "User not found"
+      });
+    }
+    if (!name) {
+      return res.status(400).json({
+        error: "Name is required"
+      });
+    } else {
+      user.name = name;
+    }
+
+    if (password) {
+      if (password.length < 6) {
         return res.status(400).json({
-          error: "You are not authorized to perform this action"
+          error: "Password should be min 6 characters long"
+        });
+      } else {
+        user.password = password;
+      }
+    }
+
+    user.save((err, updatedUser) => {
+      if (err) {
+        console.log("USER UPDATE ERROR", err);
+        return res.status(400).json({
+          error: "User update failed"
         });
       }
-      user.hashed_password = undefined;
-      user.salt = undefined;
-      // return the updated user info to frontend
-      res.json(user);
-    }
-  );
+      updatedUser.hashed_password = undefined;
+      updatedUser.salt = undefined;
+      res.json(updatedUser);
+    });
+  });
 };
 
 // add user purchase order to order history
@@ -74,4 +117,17 @@ exports.addOrderToUserHistory = (req, res, next) => {
       next();
     }
   );
+};
+
+// get user's purchase history
+exports.purchaseHistory = (req, res) => {
+  Order.find({ user: req.profile._id })
+    .populate("user", "_id name")
+    .sort("-create")
+    .exec((err, orders) => {
+      if (err) {
+        return res.status(400).json({ error: errorHandler(err) });
+      }
+      res.json(orders);
+    });
 };
